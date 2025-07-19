@@ -3,6 +3,9 @@ org: vitinhosouza
 # "service" is the name of this project. This will also be added to your AWS resource names.
 service: foodiary-api
 
+plugins:
+  - serverless-offline
+
 provider:
   name: aws
   region: us-east-1
@@ -19,13 +22,13 @@ build:
 
 functions:
   signin:
-    handler: src/signin.handler
+    handler: src/functions/signin.handler
     events:
       - httpApi:
           path: /signin
           method: POST
   signup:
-    handler: src/signup.handler
+    handler: src/functions/signup.handler
     events:
       - httpApi:
           path: /signup

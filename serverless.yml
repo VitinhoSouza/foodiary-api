@@ -28,17 +28,35 @@ functions:
     handler: src/functions/signin.handler
     events:
       - httpApi:
-          path: /signin
           method: POST
+          path: /signin
   signup:
     handler: src/functions/signup.handler
     events:
       - httpApi:
-          path: /signup
           method: POST
+          path: /signup
   me:
     handler: src/functions/me.handler
     events:
       - httpApi:
-          path: /me
           method: GET
+          path: /me
+  createMeal:
+    handler: src/functions/createMeal.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /meals
+  listMeals:
+    handler: src/functions/listMeals.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /meals
+  getMealById:
+    handler: src/functions/getMealById.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /meals/{mealId}

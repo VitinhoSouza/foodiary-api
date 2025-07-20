@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.152",
     "@types/node": "^24.0.15",
+    "dotenv": "^17.2.0",
     "drizzle-kit": "^0.31.4",
     "serverless-offline": "^14.4.0",
     "tsx": "^4.20.3",

@@ -20,6 +20,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.848.0",
+    "@aws-sdk/s3-request-presigner": "^3.848.0",
     "@neondatabase/serverless": "^0.10.4",
     "bcryptjs": "^3.0.2",
     "drizzle-orm": "^0.44.3",

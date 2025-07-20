@@ -4,6 +4,7 @@ import { HttpRequest, HttpResponse } from "../types/Http";
 import { badRequest, conflict, created } from "../utils/http";
 import { db } from "../db";
 import { usersTable } from "../db/schema";
+import { signAccessTokenFor } from "../lib/jwt";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
 
@@ -59,8 +60,8 @@ export class SignUpController {
         id: usersTable.id,
       });
 
-    return created({
-      userId: user.id,
-    });
+    const accessToken = signAccessTokenFor(user.id);
+
+    return created({ accessToken });
   }
 }

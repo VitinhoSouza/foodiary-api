@@ -4,9 +4,9 @@ export type HttpRequest = {
   params: Record<string, any>;
 };
 
-// export type ProtectedHttpRequest = HttpRequest & {
-//   userId: string;
-// }
+export type ProtectedHttpRequest = HttpRequest & {
+  userId: string;
+};
 
 export type HttpResponse = {
   statusCode: number;

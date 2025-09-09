@@ -1,6 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { mealsTable } from "../db/schema";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { Readable } from "node:stream";
+import { s3Client } from "../clients/s3Client";
+import { getMealDetailsFromText, transcribeAudio } from "../services/ai";
 
 export class ProcessMeal {
   static async process({ fileKey }: { fileKey: string }) {
@@ -22,31 +26,60 @@ export class ProcessMeal {
       .where(eq(mealsTable.id, meal.id));
 
     try {
-      // CHAMAR A IA...
+      let icon = "";
+      let name = "";
+      let foods = [];
+
+      if (meal.inputType === "audio") {
+        const audioFileBuffer = await this.downloadAudioFile(meal.inputFileKey);
+
+        const transcription = await transcribeAudio(audioFileBuffer);
+
+        const mealDetails = await getMealDetailsFromText({
+          createdAt: new Date(),
+          text: transcription,
+        });
+
+        icon = mealDetails.icon;
+        name = mealDetails.name;
+        foods = mealDetails.foods;
+      }
 
       await db
         .update(mealsTable)
         .set({
           status: "success",
-          name: "Café da manhã",
-          icon: "🍞",
-          foods: [
-            {
-              name: "Pão",
-              quantity: "2 fatias",
-              calories: 100,
-              proteins: 200,
-              carbohydrates: 300,
-              fasts: 400,
-            },
-          ],
+          name,
+          icon,
+          foods,
         })
         .where(eq(mealsTable.id, meal.id));
-    } catch {
+    } catch (error) {
+      console.log(error);
       await db
         .update(mealsTable)
         .set({ status: "failed" })
         .where(eq(mealsTable.id, meal.id));
     }
+  }
+
+  private static async downloadAudioFile(fileKey: string) {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: fileKey,
+    });
+
+    const { Body } = await s3Client.send(command);
+
+    if (!Body || !(Body instanceof Readable)) {
+      throw new Error("Cannot load the audio file.");
+    }
+
+    const chunks = [];
+    for await (const chunk of Body) {
+      chunks.push(chunk);
+    }
+
+    return Buffer.concat(chunks);
   }
 }

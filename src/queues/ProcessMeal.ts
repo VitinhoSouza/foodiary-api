@@ -4,7 +4,12 @@ import { mealsTable } from "../db/schema";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
 import { s3Client } from "../clients/s3Client";
-import { getMealDetailsFromText, transcribeAudio } from "../services/ai";
+import {
+  getMealDetailsFromImage,
+  getMealDetailsFromText,
+  transcribeAudio,
+} from "../services/ai";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export class ProcessMeal {
   static async process({ fileKey }: { fileKey: string }) {
@@ -38,6 +43,19 @@ export class ProcessMeal {
         const mealDetails = await getMealDetailsFromText({
           createdAt: new Date(),
           text: transcription,
+        });
+
+        icon = mealDetails.icon;
+        name = mealDetails.name;
+        foods = mealDetails.foods;
+      }
+
+      if (meal.inputType === "picture") {
+        const imageURL = await this.getImageURL(meal.inputFileKey);
+
+        const mealDetails = await getMealDetailsFromImage({
+          createdAt: meal.createdAt,
+          imageURL,
         });
 
         icon = mealDetails.icon;
@@ -81,5 +99,14 @@ export class ProcessMeal {
     }
 
     return Buffer.concat(chunks);
+  }
+
+  private static async getImageURL(fileKey: string) {
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: fileKey,
+    });
+
+    return getSignedUrl(s3Client, command, { expiresIn: 600 });
   }
 }

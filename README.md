@@ -1,69 +1,96 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in NodeJS'
-description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# 🍽️ Foodiary API
 
-# Serverless Framework Node HTTP API on AWS
+API for **Foodiary**, an application that helps people track their diet and nutrition through photos or audio of their meals.  
+The system uses **Artificial Intelligence** to identify food items and automatically calculate macronutrients (proteins, carbohydrates, and fats), making nutritional tracking practical and intelligent.
 
-This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.
+---
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
+## 🛠 Technologies Used
 
-## Usage
+- **Node.js** + **TypeScript** — Back-end foundation  
+- **Serverless Framework** — Deployment and management of serverless functions (AWS Lambda + API Gateway) + **serverless-offline** — Local simulation of the serverless environment  
+- **AWS SDK** — Integration with AWS services  
+  - **S3** → File storage  
+  - **SQS** → Message queue for asynchronous processing  
+- **Drizzle ORM** — Database modeling and management  
+- **Neon** (Serverless PostgreSQL) — Scalable relational database  
+- **OpenAI API** — Food recognition and macronutrient calculation powered by AI  
+- **Zod** — Data validation and type safety  
+- **bcryptjs** — Password hashing  
+- **JWT (jsonwebtoken)** — User authentication  
 
-### Deployment
+---
 
-In order to deploy the example, you need to run the following command:
+## 🌐 API Endpoints
 
-```
-serverless deploy
-```
+The following HTTP endpoints are available when running the project (either locally with `serverless-offline` or deployed on AWS):
 
-After running deploy, you should see output similar to:
+- **Auth**
+  - `POST /signup` → Register a new user  
+  - `POST /signin` → Authenticate a user and return an access token  
+  - `GET /me` → Get authenticated user information  
 
-```
-Deploying "serverless-http-api" to stage "dev" (us-east-1)
+- **Meals**
+  - `POST /meals` → Register a new meal (supports image or audio input, processed with AI)  
+  - `GET /meals` → List all meals for the authenticated user  
+  - `GET /meals/{mealId}` → Get details of a specific meal  
 
-✔ Service deployed to stack serverless-http-api-dev (91s)
+---
 
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: serverless-http-api-dev-hello (1.6 kB)
-```
+## ⚙️ How to Clone and Run Locally
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [HTTP API (API Gateway V2) event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api).
+1. **Clone the repository**
 
-### Invocation
-
-After successful deployment, you can call the created application via HTTP:
-
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
+```bash
+git clone https://github.com/VitinhoSouza/foodiary-api.git
+cd foodiary-api
 ```
 
-Which should result in response similar to:
+2. **Install the dependencies**
 
-```json
-{ "message": "Go Serverless v4! Your function executed successfully!" }
+```bash
+npm install
 ```
 
-### Local development
+3. **Set up environment variables**
 
-The easiest way to develop and test your function is to use the `dev` command:
+Create a .env file based on .env.example and configure:
 
 ```
-serverless dev
+DATABASE_URL="postgresql://user:password@host:port/dbname"
+JWT_SECRET="your_secret_key"
+OPENAI_API_KEY="your_openai_api_key"
 ```
 
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
+4. **Run Drizzle migrations**
 
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
+```
+npx drizzle-kit migrate
+```
 
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+5. **Start the serverless offline environment**
+
+```
+npm run dev
+```
+
+## ☁️ AWS Resources (created on deploy)
+
+When deploying to AWS with the Serverless Framework, the following resources are automatically created and managed:
+
+- **S3 Bucket** (`UploadsBucket`)  
+  - Stores uploaded meal images and files  
+  - Triggers the `fileUploadedEvent` Lambda on object creation  
+
+- **SQS Queue** (`MealsQueue`)  
+  - Handles asynchronous meal processing tasks  
+  - Configured with a **Dead Letter Queue (DLQ)** (`MealsDLQ`) for failed messages  
+
+> ⚠️ **Note**: Locally, these resources are mocked when using `serverless-offline`.  
+For a complete local simulation (including S3 and SQS), you may need tools like **LocalStack** or **MinIO**.  
+
+6. **The server will be available at:**
+
+```
+👉 http://localhost:3000
+```
